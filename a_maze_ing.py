@@ -16,8 +16,8 @@ if __name__ == "__main__":
         config["HEIGHT"],
         config["ENTRY"],
         config["EXIT"],
-        config["SEED"],
         config["PERFECT"],
+        config["SEED"],
     )
 
     ui = MazeUI(generator)
@@ -31,7 +31,10 @@ if __name__ == "__main__":
         print(" 4) exit")
 
         choice = int(input("> ").strip())
-        
+
+        if choice == 4:
+            break
+
         os.system("clear")
 
         if choice == 1:
@@ -49,10 +52,6 @@ if __name__ == "__main__":
             ]
             ui.wall_color = random.choice(available)
             ui.maze.print_maze(ui.wall_color, ui.show_path)
-        elif choice == 4:
-            break
         else:
             print("\n  ERROR CHOICE \n")
     generator.export(config["OUTPUT_FILE"])
-
-

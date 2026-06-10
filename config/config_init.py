@@ -1,8 +1,20 @@
 from config.exceptions import ConfigError, ConfigParseError, ConfigValueError
 import sys
+from typing import TypedDict, cast
 
 
-ConfigValue = int | str | bool | tuple[int, int] | None
+ConfigValue = int | str | bool | tuple[int, int]
+
+
+class Config(TypedDict):
+    WIDTH: int
+    HEIGHT: int
+    ENTRY: tuple[int, int]
+    EXIT: tuple[int, int]
+    OUTPUT_FILE: str
+    PERFECT: bool
+    SEED: int
+
 
 KEYS = (
     "WIDTH",
@@ -13,8 +25,6 @@ KEYS = (
     "PERFECT",
     "SEED",
 )
-
-Config = dict[str, ConfigValue]
 
 
 def parse_int(v: str) -> int:
@@ -49,6 +59,7 @@ PARSERS = {
     "SEED": parse_int,
 }
 
+
 def check_dimension(cnf: Config) -> None:
     if cnf["WIDTH"] < 1 or cnf["WIDTH"] > 45:
         raise ConfigValueError("Invalid width: width > 9 & < 45")
@@ -73,7 +84,7 @@ def check_entry_exit(cnf: Config) -> None:
 def check_output_file(cnf: Config) -> None:
     file = cnf["OUTPUT_FILE"]
     if file.count("/") != 0:
-        raise ConfigValueError("Output file is a directory:", file)
+        raise ConfigValueError(f"Output file is a directory: {file}")
 
 
 def check_seed(cnf: Config) -> None:
@@ -87,6 +98,7 @@ VALIDATOR = (
     check_output_file,
     check_seed,
 )
+
 
 def raw_config() -> list[tuple[str, str]]:
     raw: list[tuple[str, str]] = []
@@ -126,14 +138,21 @@ def raw_config() -> list[tuple[str, str]]:
 
 
 def config_parser() -> Config:
-    config: Config = {k: None for k in KEYS}
+    config: dict[str, ConfigValue] = {}
     raw = raw_config()
 
     for key, value in raw:
         try:
-            config[key] = PARSERS[key](value)
+            parsed_value = PARSERS[key](value)
+            config[key] = cast(ConfigValue, parsed_value)
         except (ValueError, TypeError) as e:
             raise ConfigValueError(f"Invalid value for {key}: {value}") from e
+
+    missing = [key for key in KEYS if key not in config]
+    if missing:
+        raise ConfigParseError(f"Missing key: {', '.join(missing)}")
+
+    typed_config = cast(Config, config)
     for funct in VALIDATOR:
-        funct(config)
-    return config
+        funct(typed_config)
+    return typed_config

@@ -46,9 +46,9 @@ class MazeGenerator:
     # NEIGHBORS
     # ----------------------------
 
-    def _get_neighbors(self, cell: Cell):
+    def _get_neighbors(self, cell: Cell) -> list[tuple[Cell, int]]:
         x, y = cell.x, cell.y
-        neighbors = []
+        neighbors: list[tuple[Cell, int]] = []
 
         for direction, (dx, dy) in DIRS.items():
             nx, ny = x + dx, y + dy
@@ -56,7 +56,8 @@ class MazeGenerator:
             if 0 <= nx < self.width and 0 <= ny < self.height:
                 next_cell = self.grid[ny][nx]
 
-                if not next_cell.visited and not getattr(next_cell, "is_42", False):
+                if not next_cell.visited and not getattr(next_cell,
+                                                         "is_42", False):
                     neighbors.append((next_cell, direction))
 
         return neighbors
@@ -65,7 +66,8 @@ class MazeGenerator:
     # WALL REMOVAL
     # ----------------------------
 
-    def _remove_wall(self, current: Cell, next_cell: Cell, direction: int) -> None:
+    def _remove_wall(self, current: Cell,
+                     next_cell: Cell, direction: int) -> None:
         current.walls[direction] = 0
 
         opposite = {
@@ -171,8 +173,8 @@ class MazeGenerator:
         goal = self.grid[end_y][end_x]
 
         queue = deque([start])
-        parents = {start: None}
-        visited = set([start])
+        parents: dict[Cell, Cell | None] = {start: None}
+        visited: set[Cell] = {start}
 
         while queue:
             cell = queue.popleft()
@@ -196,7 +198,7 @@ class MazeGenerator:
 
         # ricostruzione path
         path = []
-        cur = goal
+        cur: Cell | None = goal
 
         while cur is not None:
             path.append((cur.x, cur.y))
@@ -206,7 +208,6 @@ class MazeGenerator:
 
         self.solution = path
         return path
-
 
     # ----------------------------
     # DEBUG PRINT
@@ -311,7 +312,9 @@ class MazeGenerator:
         if self.solution is None:
             self.solve()
 
-        path_dirs = self._path_to_dirs(self.solution)
+        path = self.solution if self.solution is not None else self.solve()
+
+        path_dirs = self._path_to_dirs(path)
         lines.append(path_dirs)
 
         # write file
